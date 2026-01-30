@@ -81,7 +81,7 @@ describe("memory plugin e2e", () => {
     delete process.env.TEST_MEMORY_API_KEY;
   });
 
-  test("config schema rejects missing apiKey", async () => {
+  test("config schema rejects missing apiKey for OpenAI provider", async () => {
     const { default: memoryPlugin } = await import("./index.js");
 
     expect(() => {
@@ -89,7 +89,58 @@ describe("memory plugin e2e", () => {
         embedding: {},
         dbPath,
       });
-    }).toThrow("embedding.apiKey is required");
+    }).toThrow("embedding.apiKey is required when using OpenAI provider");
+  });
+
+  test("config schema accepts local provider without apiKey", async () => {
+    const { default: memoryPlugin } = await import("./index.js");
+
+    const config = memoryPlugin.configSchema?.parse?.({
+      embedding: {
+        provider: "local",
+      },
+      dbPath,
+    });
+
+    expect(config).toBeDefined();
+    expect(config?.embedding?.provider).toBe("local");
+    expect(config?.embedding?.apiKey).toBeUndefined();
+    // Should use default local model
+    expect(config?.embedding?.model).toContain("embeddinggemma");
+  });
+
+  test("config schema accepts local provider with custom model path", async () => {
+    const { default: memoryPlugin } = await import("./index.js");
+
+    const config = memoryPlugin.configSchema?.parse?.({
+      embedding: {
+        provider: "local",
+        local: {
+          modelPath: "hf:custom/model.gguf",
+          modelCacheDir: "/tmp/models",
+        },
+      },
+      dbPath,
+    });
+
+    expect(config).toBeDefined();
+    expect(config?.embedding?.provider).toBe("local");
+    expect(config?.embedding?.local?.modelPath).toBe("hf:custom/model.gguf");
+    expect(config?.embedding?.local?.modelCacheDir).toBe("/tmp/models");
+  });
+
+  test("config schema defaults to OpenAI provider for backwards compatibility", async () => {
+    const { default: memoryPlugin } = await import("./index.js");
+
+    const config = memoryPlugin.configSchema?.parse?.({
+      embedding: {
+        apiKey: OPENAI_API_KEY,
+      },
+      dbPath,
+    });
+
+    expect(config).toBeDefined();
+    expect(config?.embedding?.provider).toBe("openai");
   });
 
   test("shouldCapture filters correctly", async () => {
