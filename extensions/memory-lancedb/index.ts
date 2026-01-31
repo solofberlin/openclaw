@@ -110,13 +110,17 @@ class MemoryDB {
   async search(vector: number[], limit = 5, minScore = 0.5): Promise<MemorySearchResult[]> {
     await this.ensureInitialized();
 
-    const results = await this.table!.vectorSearch(vector).limit(limit).toArray();
+    // Use cosine distance for better compatibility with unnormalized embeddings
+    const results = await this.table!.vectorSearch(vector)
+      .distanceType("cosine")
+      .limit(limit)
+      .toArray();
 
-    // LanceDB uses L2 distance by default; convert to similarity score
+    // Cosine distance ranges 0-2; convert to similarity score (1 - d/2)
     const mapped = results.map((row) => {
       const distance = row._distance ?? 0;
-      // Use inverse for a 0-1 range: sim = 1 / (1 + d)
-      const score = 1 / (1 + distance);
+      // Cosine distance: 0 = identical, 2 = opposite; convert to 0-1 similarity
+      const score = 1 - distance / 2;
       return {
         entry: {
           id: row.id as string,
