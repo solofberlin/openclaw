@@ -385,7 +385,6 @@ const memoryPlugin = {
       : `openai (model: ${cfg.embedding.model})`;
 
     api.logger.info(`memory-lancedb: plugin registered (db: ${resolvedDbPath}, embeddings: ${providerInfo}, lazy init)`);
->>>>>>> d395e40ba (feat(memory-lancedb): add local embedding support via node-llama-cpp)
 
     // ========================================================================
     // Tools
