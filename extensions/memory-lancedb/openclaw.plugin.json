@@ -2,16 +2,31 @@
   "id": "memory-lancedb",
   "kind": "memory",
   "uiHints": {
+    "embedding.provider": {
+      "label": "Embedding Provider",
+      "help": "Choose 'openai' for remote embeddings or 'local' for on-device embeddings"
+    },
     "embedding.apiKey": {
       "label": "OpenAI API Key",
       "sensitive": true,
       "placeholder": "sk-proj-...",
-      "help": "API key for OpenAI embeddings (or use ${OPENAI_API_KEY})"
+      "help": "API key for OpenAI embeddings (required if provider is 'openai')"
     },
     "embedding.model": {
       "label": "Embedding Model",
       "placeholder": "text-embedding-3-small",
-      "help": "OpenAI embedding model to use"
+      "help": "Model to use for embeddings"
+    },
+    "embedding.local.modelPath": {
+      "label": "Local Model Path",
+      "placeholder": "hf:ggml-org/embeddinggemma-300M-GGUF/embeddinggemma-300M-Q8_0.gguf",
+      "help": "Path to local GGUF embedding model",
+      "advanced": true
+    },
+    "embedding.local.modelCacheDir": {
+      "label": "Model Cache Directory",
+      "help": "Directory to cache downloaded models",
+      "advanced": true
     },
     "dbPath": {
       "label": "Database Path",
@@ -35,15 +50,30 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
+          "provider": {
+            "type": "string",
+            "enum": ["openai", "local"],
+            "default": "openai"
+          },
           "apiKey": {
             "type": "string"
           },
           "model": {
-            "type": "string",
-            "enum": ["text-embedding-3-small", "text-embedding-3-large"]
+            "type": "string"
+          },
+          "local": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "modelPath": {
+                "type": "string"
+              },
+              "modelCacheDir": {
+                "type": "string"
+              }
+            }
           }
-        },
-        "required": ["apiKey"]
+        }
       },
       "dbPath": {
         "type": "string"
